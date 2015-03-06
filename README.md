@@ -1,9 +1,9 @@
-##indexor
+# indexor
 Simple / flexible data structure for indexes.  
 
 Useful for infinite loading lists, twitter style feeds, conversations, or any index where the entire index is not known upfront.  Uses immutable.js for underlying data structures, and plays nicely with flux stores.
 
-### Usage
+## Usage
 ```js
 var Index = require('indexor')
 
@@ -21,7 +21,7 @@ index.set(['a', 'b', 'c', 'd'])
 index.prepend(['a', 'd'])             // ['a', 'd', 'b', 'c']
 ```
 
-#### Simple Blog Index
+**Simple Blog Index**
 ```js
 var feed = new Index()
 getBlogPosts(function(posts){
@@ -40,7 +40,7 @@ var renderAsJSON = function(){
   return JSON.stringify(feed.asArray()) // JSON representation of the feed index
 }
 ```
-#### Dealing with cursors
+**Dealing with cursors**
 ```js
 //translate indexor cursors to your own time based cursor for use in API calls
 var posts = {
@@ -58,14 +58,14 @@ var cursor = feed.getBackmostCursor()
 API.getMorePosts({cursor: cursor})
 ```
 
-### API
-#### constructor
+## API
+### constructor
 **new Indexor(chunk, opts)**  
 * `chunk`: _Array_ or immutable _List_ : A contiguous section of the index (i.e. it is a complete sequenced set of values) 
 * `opts`: _Object_ :  
   * `cursorTranslator`: _fn_ : A function which translates a index element into a application specific cursor.  
 
-#### append/prepend/unshift/push
+### append/prepend/unshift/push
 These methods all accept a single array (or immutable List) chunk as an argument and put the chunk either at the beginning or end of the index.  
  
 **append**: append the chunk to the end of the index and merge the chunk into the existing cursor range.
@@ -75,13 +75,13 @@ These methods all accept a single array (or immutable List) chunk as an argument
 * `chunk`: _Array_ or immutable _List_ : The chunk to be added onto the index.
 
 
-#### merge
+### merge
 * `type`: _String_ : the fallback operation to perform if the chunk does not overlap with the existing index
 * `chunk`: _Array_ or immutable _List_ : The chunk to be merged into the index.  
 
 If the chunk start and end elements are both already in the index, the index segment between start and end will be replaced in whole with the chunk.  If only the start or end element exists the chunk will be spliced in.
 
-#### cursors
+### cursors
 A naive implementation can simply use the `getBackmostCursor` in combination with `append` and everthing will magically work.  However if your application requires more nuanced control then you will need to understand how indexor handles cursors.  
 
 Indexor stores cursors as a immutable list of arrays. e.g. [[0, 10] [12, 20]] would indicate that we have populated the index fully between 0 and 10, and between 12 and 20, but we do not know what index elements may exist between 10 and 12, or beyond 20.In the context of an API you will typically want to use 10 (`getFirstBackCursor`) as the basis for your next request. 
@@ -95,7 +95,7 @@ All cursor methods will be translated to application specific cursors by the `op
 * **getLastFrontCursor**: returns the last front curosr.
 * **getCursors**: returns all cursor ranges as an immutable List of arrays
 
-#### freezing
+### freezing
 Indexes typically have a notion of being terminal endpoints.  E.G. if we have a infinite scrolling message board, the first message ever sent will be terminal. As a matter of conveinence, indexor provides the ability to "freeze" the front or back of the index, which does two things:
 * Indicates that the index is terminal at that end (and no future updates should be invoked)
 * Throws and error if the consumer attempts to merge onto the frozen end  
