@@ -56,17 +56,37 @@ API.getMorePosts({cursor: cursor})
 ```
 
 ### API
-#### append/prepend/unshift/push
-These methods all accept a single array (or immutable List) chunk as an argument and put the chunk either at the beginning or end of the index.  
-`chunk`: _Array_ or immutablejs _List : A contiguous section of the index (i.e. it is a complete sequenced set of values)  
+#### constructor
+**new Indexor(chunk, opts)**
+`chunk`: _Array_ or immutablejs _List : A contiguous section of the index (i.e. it is a complete sequenced set of values) 
+`opts`: _Object_ : 
+* `cursorTranslator`: _fn_ : A function which translates a index element into a application specific cursor.  
 
-* **append(array)**: append the chunk to the end of the index and merge the chunk into the existing cursor range.
-* **prepend(array)**: prepend the chunk to the front of the index and merge the chunk into the existing cursor range.
-* **push(array)**: append the chunk to the end of the index and add a new cursor range but do not merge the cursor ranges.
-* **unshift(array)**: prepend the chunk to the front of the index and add a new cursor range but do not merge the cursor ranges.
+#### append/prepend/unshift/push
+These methods all accept a single array (or immutable List) chunk as an argument and put the chunk either at the beginning or end of the index. 
+`chunk`: _Array_ or immutablejs _List : The chunk to be added onto the index.
+ 
+* **append**: append the chunk to the end of the index and merge the chunk into the existing cursor range.
+* **prepend**: prepend the chunk to the front of the index and merge the chunk into the existing cursor range.
+* **push**: append the chunk to the end of the index and add a new cursor range but do not merge the cursor ranges.
+* **unshift**: prepend the chunk to the front of the index and add a new cursor range but do not merge the cursor ranges.
 
 #### merge
 * `type`: _String_ : the fallback operation to perform if the chunk does not overlap with the existing index
 * `chunk`: _Array_ or immutablejs _List : The chunk to be merged into the index.  
 
 If the chunk start and end elements are both already in the index, the index segment between start and end will be replaced in whole with the chunk.  If only the start or end element exists the chunk will be spliced in.
+
+#### cursors getters
+A naive implementation can simply use the `getBackmostCursor` in combination with `append` and everthing will magically work.  However if your application requires more nuanced control then you will need to understand how indexor handles cursors.  
+
+Indexor stores cursors as a immutable list of arrays. e.g. [[0, 10] [12, 20]] would indicate that we have populated the index fully between 0 and 10, and between 12 and 20, but we do not know what index elements may exist between 10 and 12, or beyond 20.In the context of an API you will typically want to use 10 (`getFirstBackCursor`) as the basis for your next request. 
+
+However while this multi-cursor apparatus exists, and allows for use cases like twitter mobile app (where the cursor gap is represented by the "load more tweets" button in your feed) it can be safely ignored if you only ever call `append` and `prepend` as these methods always merge the cursors ranges.  Furthermore because append/prepend are explicit about how they want to be inserted, they are optimized to skip much of the processing that occurs in the `merge` method.
+
+All cursor methods will be translated to application specific cursors by the `opts.cursorTranslator` function if provided.
+* **getBackmostCursor**: returns the backmost cursor. 
+* **getFrontmostCursor**: returns the frontmost curosr.
+* **getFirstBackCursor**: returns the first back cursor.
+* **getLastFrontCursor**: returns the last front curosr.
+* **getCursors**: returns all cursor ranges as an immutable List of arrays
