@@ -107,3 +107,16 @@ This is especially useful when dealing with infinite loading in either or both d
 * **unfreezeFront**: unfreeze the front
 * **isBackFrozen**: returns true if frozen false if not
 * **isFrontFrozen**: returns true if frozen false if not
+
+## Use Cases
+Most implementations should stick to a subset of the provided methods, whichever methods are best suited to the application.  
+
+Implementing a [twitter home_timeline](https://dev.twitter.com/rest/reference/get/statuses/home_timeline) index would be exclusively `.setRange(results, since_id, results[0].id)` calls.  
+
+Implementing a chat index with web sockets might rely on the following two methods: `.set(chunk)` initially followed by a bunch of `.prepend(message)` as the socket sends messages down.
+
+While any given implementation will initially only use only a small subset of the methods, there is a great benefit to having your index stored in this generalized data structure. E.G. 
+
+Later on in development you may add a caching of your index, this might be a `.push(chunk)` call during bootstrap. 
+
+Or in the twitter application you may want to interleave other content such as "review this app" related instagram photos into the timeline. Since these new content pieces do not exist in the server representation of the the timeline, the simplest implementation is simply to `.prepend(item)` the content into the index.
